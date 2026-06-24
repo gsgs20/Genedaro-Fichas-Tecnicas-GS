@@ -1,11 +1,539 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Cubo Makers - Fichas Técnicas</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generador de Fichas Técnicas – Cubo Makers</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Barlow',sans-serif;background:#F0F0F0;color:#111;display:flex;min-height:100vh}
+
+/* ── PANEL IZQUIERDO ── */
+#panel{width:380px;min-width:320px;background:#fff;border-right:1px solid #ddd;display:flex;flex-direction:column;height:100vh;overflow-y:auto;position:sticky;top:0}
+#panel-header{background:#111;color:#F5C800;padding:18px 20px}
+#panel-header h1{font-size:15px;font-weight:700;letter-spacing:.5px}
+#panel-header p{font-size:11px;color:#aaa;margin-top:2px}
+
+.section-label{background:#F5C800;color:#111;font-size:11px;font-weight:700;letter-spacing:1px;padding:6px 20px;text-transform:uppercase}
+.field-group{padding:14px 20px;border-bottom:1px solid #f0f0f0;display:flex;flex-direction:column;gap:6px}
+.field-group label{font-size:11px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.5px}
+.field-group input[type=text],
+.field-group input[type=number]{width:100%;border:1.5px solid #ddd;border-radius:6px;padding:8px 10px;font-family:'Barlow',sans-serif;font-size:13px;color:#111;outline:none;transition:border .2s}
+.field-group input:focus{border-color:#F5C800}
+.field-group input[readonly]{background:#f7f7f7;color:#888;cursor:default}
+
+.scale-row{display:flex;align-items:center;gap:8px}
+.scale-row input{width:70px;text-align:center}
+.scale-sep{font-size:18px;font-weight:700;color:#888}
+
+.toggle-row{display:flex;gap:8px}
+.toggle-btn{flex:1;padding:8px;border:1.5px solid #ddd;border-radius:6px;background:#fff;font-family:'Barlow',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;color:#555}
+.toggle-btn.active-yes{background:#111;border-color:#111;color:#F5C800}
+.toggle-btn.active-no{background:#555;border-color:#555;color:#fff}
+
+.check-list{display:flex;flex-direction:column;gap:6px;max-height:180px;overflow-y:auto;padding:2px 0}
+.check-list label{display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;padding:3px 0}
+.check-list input[type=checkbox]{width:15px;height:15px;accent-color:#F5C800;cursor:pointer;flex-shrink:0}
+
+.dim-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.dim-cell{display:flex;flex-direction:column;gap:4px}
+.dim-cell label{font-size:10px;font-weight:700;color:#888;text-transform:uppercase}
+.dim-cell input{width:100%;border:1.5px solid #ddd;border-radius:5px;padding:7px 8px;font-family:'Barlow',sans-serif;font-size:13px;outline:none}
+.dim-cell input:focus{border-color:#F5C800}
+.dim-cell .converted{font-size:11px;color:#888;padding:2px 4px}
+
+.otros-input{margin-top:6px;width:100%;border:1.5px dashed #ddd;border-radius:6px;padding:7px 10px;font-family:'Barlow',sans-serif;font-size:13px;outline:none}
+.otros-input:focus{border-color:#F5C800;border-style:solid}
+
+/* ── PREVIEW ── */
+#preview{flex:1;padding:32px;display:flex;flex-direction:column;align-items:center;gap:32px;overflow-y:auto}
+#preview h2{font-size:12px;font-weight:700;color:#888;letter-spacing:1px;text-transform:uppercase;align-self:flex-start}
+
+.sheet{width:794px;max-width:100%;background:#fff;box-shadow:0 2px 20px rgba(0,0,0,.12);position:relative;overflow:hidden;font-family:'Barlow',sans-serif}
+
+/* barras decorativas */
+.bar-top{height:8px;background:#F5C800;position:relative}
+.bar-top::after{content:'';position:absolute;right:0;top:0;width:120px;height:8px;background:#111}
+.bar-bottom{height:8px;background:#F5C800;position:relative}
+.bar-bottom::before{content:'';position:absolute;right:0;top:0;width:120px;height:8px;background:#111}
+
+.sheet-inner{padding:28px 36px 24px}
+
+/* header de hoja */
+.sheet-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px}
+.logo-block .logo-main{font-size:22px;font-weight:800;color:#111;line-height:1}
+.logo-block .logo-main span{color:#F5C800}
+.logo-block .logo-sub{font-size:8px;font-weight:700;color:#888;letter-spacing:1.5px;text-transform:uppercase;margin-top:1px}
+.sheet-title-block{text-align:right}
+.sheet-title-block .pre{font-size:9px;font-weight:600;color:#888;letter-spacing:2px;text-transform:uppercase}
+.sheet-title-block .main{font-size:16px;font-weight:800;color:#111;letter-spacing:1px;text-transform:uppercase}
+
+/* imagen placeholder p1 */
+.img-placeholder{background:#F0F0F0;border:2px dashed #ccc;height:280px;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:13px;font-weight:600;margin-bottom:24px;border-radius:4px}
+
+/* nombre equipo */
+.equip-name{font-size:26px;font-weight:800;color:#111;line-height:1.1;margin-bottom:4px;word-break:break-word}
+.equip-sub{font-size:13px;font-weight:700;color:#111;margin-bottom:20px}
+
+/* columnas p1 */
+.p1-cols{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-bottom:20px}
+.p1-left h3{font-size:12px;font-weight:800;color:#111;margin-bottom:8px}
+.p1-left p{font-size:11px;color:#333;line-height:1.6}
+.p1-left h4{font-size:12px;font-weight:800;color:#111;margin:14px 0 6px}
+.p1-left ul{padding-left:0;list-style:none;display:flex;flex-direction:column;gap:3px}
+.p1-left ul li{font-size:11px;color:#333;display:flex;align-items:flex-start;gap:6px}
+.p1-left ul li::before{content:'•';color:#F5C800;flex-shrink:0}
+
+/* tabla Product Information */
+.info-table{border-radius:4px;overflow:hidden;border:1px solid #eee}
+.info-table-header{background:#F5C800;padding:8px 12px;font-size:12px;font-weight:800;color:#111}
+.info-table-row{display:grid;grid-template-columns:1fr 1fr;font-size:11px}
+.info-table-row:nth-child(odd){background:#f9f9f9}
+.info-table-row:nth-child(even){background:#fff}
+.info-table-row .cell{padding:7px 12px;color:#333}
+.info-table-row .cell:first-child{font-weight:600;color:#111}
+
+/* footer */
+.sheet-footer{border-top:1px solid #eee;margin-top:16px;padding-top:10px;text-align:center}
+.sheet-footer p{font-size:9px;color:#888;line-height:1.6}
+.sheet-footer strong{color:#111}
+
+/* ── PÁGINA 2 ── */
+.img-placeholder-p2{background:#F0F0F0;border:2px dashed #ccc;height:200px;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:13px;font-weight:600;margin-bottom:24px;border-radius:4px}
+
+/* tabla dimensiones */
+.dim-table{width:100%;border-collapse:collapse;margin-bottom:24px}
+.dim-table th{background:#F5C800;font-size:11px;font-weight:800;color:#111;padding:8px 10px;text-align:center;text-transform:uppercase}
+.dim-table th:first-child{background:#fff;border:none}
+.dim-table td{font-size:11px;padding:7px 10px;border-bottom:1px solid #eee;text-align:center;color:#333}
+.dim-table td:first-child{font-weight:700;color:#111;text-align:left;background:#f9f9f9}
+.dim-table tr:nth-child(odd) td:not(:first-child){background:#fff}
+.dim-table tr:nth-child(even) td:not(:first-child){background:#f9f9f9}
+
+/* manufactura y storage */
+.p2-cols{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.mini-table{border-radius:4px;overflow:hidden;border:1px solid #eee}
+.mini-table-header{background:#F5C800;padding:7px 12px;font-size:11px;font-weight:800;color:#111}
+.mini-table-row{display:grid;grid-template-columns:.9fr 1.1fr;font-size:11px}
+.mini-table-row:nth-child(odd){background:#f9f9f9}
+.mini-table-row:nth-child(even){background:#fff}
+.mini-table-row .cell{padding:6px 10px;color:#333}
+.mini-table-row .cell:first-child{font-weight:600;color:#111}
+.storage-box{border-radius:4px;overflow:hidden;border:1px solid #eee}
+.storage-header{background:#F5C800;padding:7px 12px;font-size:11px;font-weight:800;color:#111}
+.storage-list{padding:8px 12px;display:flex;flex-direction:column;gap:4px}
+.storage-list li{font-size:10.5px;color:#333;display:flex;gap:6px}
+.storage-list li::before{content:'•';color:#F5C800;flex-shrink:0}
+
+@media(max-width:900px){
+  body{flex-direction:column}
+  #panel{width:100%;height:auto;position:static}
+  .sheet{width:100%}
+  #preview{padding:16px}
+}
+</style>
 </head>
 <body>
-  <h1>Generador de Fichas Técnicas</h1>
-  <p>Próximamente...</p>
+
+<!-- ══════════ PANEL FORMULARIO ══════════ -->
+<div id="panel">
+  <div id="panel-header">
+    <h1>Generador de Fichas Técnicas</h1>
+    <p>Cubo Makers S.A.C. — completa los campos y revisa la vista previa</p>
+  </div>
+
+  <div class="section-label">Página 1</div>
+
+  <div class="field-group">
+    <label>Nombre del equipo</label>
+    <input type="text" id="f-nombre" placeholder="Ej: TEGA Ball Mill Liners" oninput="update()">
+  </div>
+
+  <div class="field-group">
+    <label>Escala</label>
+    <div class="scale-row">
+      <input type="number" id="f-scale-a" min="1" placeholder="1" oninput="update()">
+      <span class="scale-sep">:</span>
+      <input type="number" id="f-scale-b" min="1" placeholder="40" oninput="update()">
+    </div>
+  </div>
+
+  <div class="field-group">
+    <label>¿El equipo incluye baterías?</label>
+    <div class="toggle-row">
+      <button class="toggle-btn" id="bat-yes" onclick="setToggle('bat',true)">Sí</button>
+      <button class="toggle-btn" id="bat-no"  onclick="setToggle('bat',false)">No</button>
+    </div>
+  </div>
+
+  <div class="field-group">
+    <label>¿Es un equipo motorizado?</label>
+    <div class="toggle-row">
+      <button class="toggle-btn" id="mot-yes" onclick="setToggle('mot',true)">Sí</button>
+      <button class="toggle-btn" id="mot-no"  onclick="setToggle('mot',false)">No</button>
+    </div>
+  </div>
+
+  <div class="section-label">Página 2 — Dimensiones</div>
+
+  <div class="field-group">
+    <label>Scale Model</label>
+    <div class="dim-grid">
+      <div class="dim-cell">
+        <label>Largo (cm)</label>
+        <input type="number" id="sm-l" min="0" placeholder="0" oninput="update()">
+        <span class="converted" id="sm-l-in">— in</span>
+      </div>
+      <div class="dim-cell">
+        <label>Ancho (cm)</label>
+        <input type="number" id="sm-w" min="0" placeholder="0" oninput="update()">
+        <span class="converted" id="sm-w-in">— in</span>
+      </div>
+      <div class="dim-cell">
+        <label>Alto (cm)</label>
+        <input type="number" id="sm-h" min="0" placeholder="0" oninput="update()">
+        <span class="converted" id="sm-h-in">— in</span>
+      </div>
+      <div class="dim-cell">
+        <label>Peso (kg)</label>
+        <input type="number" id="sm-kg" min="0" step="0.1" placeholder="0" oninput="update()">
+        <span class="converted" id="sm-lb">— lb</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="field-group">
+    <label>Packaging</label>
+    <div class="dim-grid">
+      <div class="dim-cell">
+        <label>Largo (cm)</label>
+        <input type="number" id="pk-l" min="0" placeholder="0" oninput="update()">
+        <span class="converted" id="pk-l-in">— in</span>
+      </div>
+      <div class="dim-cell">
+        <label>Ancho (cm)</label>
+        <input type="number" id="pk-w" min="0" placeholder="0" oninput="update()">
+        <span class="converted" id="pk-w-in">— in</span>
+      </div>
+      <div class="dim-cell">
+        <label>Alto (cm)</label>
+        <input type="number" id="pk-h" min="0" placeholder="0" oninput="update()">
+        <span class="converted" id="pk-h-in">— in</span>
+      </div>
+      <div class="dim-cell">
+        <label>Peso (kg)</label>
+        <input type="number" id="pk-kg" min="0" step="0.1" placeholder="0" oninput="update()">
+        <span class="converted" id="pk-lb">— lb</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-label">Página 2 — Manufacturing</div>
+
+  <div class="field-group">
+    <label>Materials</label>
+    <div class="check-list" id="mat-list">
+      <label><input type="checkbox" value="Plastic (PLA)" onchange="update()"> Plastic (PLA)</label>
+      <label><input type="checkbox" value="Steel" onchange="update()"> Steel</label>
+      <label><input type="checkbox" value="Acrylic" onchange="update()"> Acrylic</label>
+      <label><input type="checkbox" value="MDF" onchange="update()"> MDF</label>
+    </div>
+  </div>
+
+  <div class="field-group">
+    <label>Color</label>
+    <div class="check-list" id="color-list">
+      <label><input type="checkbox" value="Army Blue" onchange="update()"> Army Blue</label>
+      <label><input type="checkbox" value="Black" onchange="update()"> Black</label>
+      <label><input type="checkbox" value="Blue" onchange="update()"> Blue</label>
+      <label><input type="checkbox" value="Bone White" onchange="update()"> Bone White</label>
+      <label><input type="checkbox" value="Bronze" onchange="update()"> Bronze</label>
+      <label><input type="checkbox" value="Chrome" onchange="update()"> Chrome</label>
+      <label><input type="checkbox" value="Fire Engine Red" onchange="update()"> Fire Engine Red</label>
+      <label><input type="checkbox" value="Gold" onchange="update()"> Gold</label>
+      <label><input type="checkbox" value="Green" onchange="update()"> Green</label>
+      <label><input type="checkbox" value="Grey" onchange="update()"> Grey</label>
+      <label><input type="checkbox" value="Jade White" onchange="update()"> Jade White</label>
+      <label><input type="checkbox" value="Light Blue" onchange="update()"> Light Blue</label>
+      <label><input type="checkbox" value="Navy Blue" onchange="update()"> Navy Blue</label>
+      <label><input type="checkbox" value="Night Grey" onchange="update()"> Night Grey</label>
+      <label><input type="checkbox" value="Olive Green" onchange="update()"> Olive Green</label>
+      <label><input type="checkbox" value="Orange" onchange="update()"> Orange</label>
+      <label><input type="checkbox" value="Pine Green" onchange="update()"> Pine Green</label>
+      <label><input type="checkbox" value="Red" onchange="update()"> Red</label>
+      <label><input type="checkbox" value="Silver" onchange="update()"> Silver</label>
+      <label><input type="checkbox" value="Space Grey" onchange="update()"> Space Grey</label>
+      <label><input type="checkbox" value="White" onchange="update()"> White</label>
+      <label><input type="checkbox" value="Yellow" onchange="update()"> Yellow</label>
+      <label id="otros-label"><input type="checkbox" id="otros-check" onchange="toggleOtros();update()"> Otro color</label>
+    </div>
+    <input type="text" class="otros-input" id="otros-input" placeholder="Escribe el color..." style="display:none" oninput="update()">
+  </div>
+
+  <div class="field-group">
+    <label>Assembly</label>
+    <div class="check-list" id="asm-list">
+      <label><input type="checkbox" value="Adhesive" onchange="update()"> Adhesive</label>
+      <label><input type="checkbox" value="Magnets" onchange="update()"> Magnets</label>
+      <label><input type="checkbox" value="Bolts" onchange="update()"> Bolts</label>
+      <label><input type="checkbox" value="Screws" onchange="update()"> Screws</label>
+    </div>
+  </div>
+
+</div><!-- /panel -->
+
+<!-- ══════════ VISTA PREVIA ══════════ -->
+<div id="preview">
+  <h2>Vista previa</h2>
+
+  <!-- ── PÁGINA 1 ── -->
+  <div class="sheet" id="sheet-p1">
+    <div class="bar-top"></div>
+    <div class="sheet-inner">
+
+      <div class="sheet-header">
+        <div class="logo-block">
+          <div class="logo-main">Cubo<span>°</span><br><span style="font-weight:400;font-size:14px">Makers</span>
+            <span style="font-size:7px;font-weight:600;color:#888;letter-spacing:1.5px;display:block;margin-top:1px">PRODUCTIVITY ON A NEW SCALE</span>
+          </div>
+        </div>
+        <div class="sheet-title-block">
+          <div class="pre">Product</div>
+          <div class="main">Data Sheet</div>
+        </div>
+      </div>
+
+      <div class="img-placeholder">Imagen del equipo — se configurará más adelante</div>
+
+      <div class="equip-name" id="p-nombre">Nombre del equipo</div>
+      <div class="equip-sub">3D Printed Scale Model</div>
+
+      <div class="p1-cols">
+        <div class="p1-left">
+          <h3>Product Overview</h3>
+          <p id="p-overview">This 3D-printed scale model is designed for display, showcasing industrial equipment in a compact, detailed format. Made with FDM technology, it uses eco-friendly PLA filaments in various colors.</p>
+          <h4>Features</h4>
+          <ul id="p-features">
+            <li>High-detail scale model.</li>
+            <li>Permanently assembled structure.</li>
+            <li id="feat-bat">—</li>
+            <li id="feat-mot">—</li>
+            <li>Designed for exhibition-oriented applications.</li>
+          </ul>
+        </div>
+        <div>
+          <div class="info-table">
+            <div class="info-table-header">Product Information</div>
+            <div class="info-table-row"><div class="cell">Base Model</div><div class="cell" id="p-basemodel">—</div></div>
+            <div class="info-table-row"><div class="cell">Use</div><div class="cell">Trade show – Display</div></div>
+            <div class="info-table-row"><div class="cell">Scale</div><div class="cell" id="p-scale">—</div></div>
+            <div class="info-table-row"><div class="cell">HS Code</div><div class="cell">9023.00.00.00</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="sheet-footer">
+      <p><strong>CUBO MAKERS S.A.C</strong><br>
+      Calle La Florida Mz. Q Lt. 30-B, Sachaca 04013, Arequipa, Perú<br>
+      comercial@cuboglobal.pro</p>
+    </div>
+    <div style="height:12px"></div>
+    <div class="bar-bottom"></div>
+  </div>
+
+  <!-- ── PÁGINA 2 ── -->
+  <div class="sheet" id="sheet-p2">
+    <div class="bar-top"></div>
+    <div class="sheet-inner">
+
+      <div class="sheet-header">
+        <div class="logo-block">
+          <div class="logo-main">Cubo<span>°</span><br><span style="font-weight:400;font-size:14px">Makers</span>
+            <span style="font-size:7px;font-weight:600;color:#888;letter-spacing:1.5px;display:block;margin-top:1px">PRODUCTIVITY ON A NEW SCALE</span>
+          </div>
+        </div>
+        <div class="sheet-title-block">
+          <div class="pre">Product</div>
+          <div class="main">Data Sheet</div>
+        </div>
+      </div>
+
+      <div class="img-placeholder-p2">Dibujos técnicos (L y W) — se configurarán más adelante</div>
+
+      <table class="dim-table">
+        <thead>
+          <tr>
+            <th style="width:120px"></th>
+            <th>Scale Model</th>
+            <th>Packaging</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Length (L)</td>
+            <td id="d-sm-l">— cm / —"</td>
+            <td id="d-pk-l">— cm / —"</td>
+          </tr>
+          <tr>
+            <td>Width (W)</td>
+            <td id="d-sm-w">— cm / —"</td>
+            <td id="d-pk-w">— cm / —"</td>
+          </tr>
+          <tr>
+            <td>Height (H)</td>
+            <td id="d-sm-h">— cm / —"</td>
+            <td id="d-pk-h">— cm / —"</td>
+          </tr>
+          <tr>
+            <td>Weight</td>
+            <td id="d-sm-kg">— kg / — lb</td>
+            <td id="d-pk-kg">— kg / — lb</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="p2-cols">
+        <div>
+          <div class="mini-table">
+            <div class="mini-table-header">Manufacturing</div>
+            <div class="mini-table-row"><div class="cell">Technology</div><div class="cell">3D Printing (FDM).</div></div>
+            <div class="mini-table-row"><div class="cell">Materials</div><div class="cell" id="p-materials">—</div></div>
+            <div class="mini-table-row"><div class="cell">Color</div><div class="cell" id="p-color">—</div></div>
+            <div class="mini-table-row"><div class="cell">Assembly</div><div class="cell" id="p-assembly">—</div></div>
+          </div>
+        </div>
+        <div>
+          <div class="storage-box">
+            <div class="storage-header">Storage</div>
+            <ul class="storage-list">
+              <li>Clean with a soft cloth or disposable wipes.</li>
+              <li>Store in a cool, dry place (5°C and 30°C).</li>
+              <li>Avoid direct sunlight exposure.</li>
+              <li>Keep away from children under 5.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div class="sheet-footer">
+      <p><strong>CUBO MAKERS S.A.C</strong><br>
+      Calle La Florida Mz. Q Lt. 30-B, Sachaca 04013, Arequipa, Perú<br>
+      comercial@cuboglobal.pro</p>
+    </div>
+    <div style="height:12px"></div>
+    <div class="bar-bottom"></div>
+  </div>
+
+</div><!-- /preview -->
+
+<script>
+var batVal = null;
+var motVal = null;
+
+function setToggle(type, val){
+  if(type==='bat'){
+    batVal = val;
+    document.getElementById('bat-yes').className = val ? 'toggle-btn active-yes' : 'toggle-btn';
+    document.getElementById('bat-no').className  = !val ? 'toggle-btn active-no'  : 'toggle-btn';
+  } else {
+    motVal = val;
+    document.getElementById('mot-yes').className = val ? 'toggle-btn active-yes' : 'toggle-btn';
+    document.getElementById('mot-no').className  = !val ? 'toggle-btn active-no'  : 'toggle-btn';
+  }
+  update();
+}
+
+function toggleOtros(){
+  var chk = document.getElementById('otros-check');
+  var inp = document.getElementById('otros-input');
+  inp.style.display = chk.checked ? 'block' : 'none';
+  if(!chk.checked) inp.value = '';
+}
+
+function getChecked(listId){
+  var items = document.querySelectorAll('#'+listId+' input[type=checkbox]:checked');
+  var vals = [];
+  items.forEach(function(el){ if(el.id!=='otros-check') vals.push(el.value); });
+  return vals;
+}
+
+function cmToIn(v){ return v ? (parseFloat(v)*0.393701).toFixed(1) : null; }
+function kgToLb(v){ return v ? (parseFloat(v)*2.20462).toFixed(2) : null; }
+
+function dimStr(cm){
+  if(!cm || cm==='' || parseFloat(cm)===0) return '—';
+  return parseFloat(cm)+' cm / '+cmToIn(cm)+'"';
+}
+function weightStr(kg){
+  if(!kg || kg==='' || parseFloat(kg)===0) return '—';
+  return parseFloat(kg)+' kg / '+kgToLb(kg)+' lb';
+}
+
+function update(){
+  var nombre = document.getElementById('f-nombre').value.trim();
+  var scA = document.getElementById('f-scale-a').value;
+  var scB = document.getElementById('f-scale-b').value;
+
+  // Página 1
+  document.getElementById('p-nombre').textContent    = nombre || 'Nombre del equipo';
+  document.getElementById('p-basemodel').textContent = nombre || '—';
+  document.getElementById('p-overview').textContent  = nombre
+    ? 'This 3D-printed scale model of a '+nombre+' is designed for display, showcasing industrial equipment in a compact, detailed format. Made with FDM technology, it uses eco-friendly PLA filaments in various colors.'
+    : 'This 3D-printed scale model is designed for display, showcasing industrial equipment in a compact, detailed format. Made with FDM technology, it uses eco-friendly PLA filaments in various colors.';
+
+  var scaleStr = (scA && scB) ? scA+':'+scB : '—';
+  document.getElementById('p-scale').textContent = scaleStr;
+
+  document.getElementById('feat-bat').textContent = batVal===true ? 'If batteries are needed.' : batVal===false ? 'No batteries needed.' : '—';
+  document.getElementById('feat-mot').textContent = motVal===true ? 'Motorized systems included.' : motVal===false ? 'No motor included.' : '—';
+
+  // Dimensiones
+  var smL = document.getElementById('sm-l').value;
+  var smW = document.getElementById('sm-w').value;
+  var smH = document.getElementById('sm-h').value;
+  var smKg= document.getElementById('sm-kg').value;
+  var pkL = document.getElementById('pk-l').value;
+  var pkW = document.getElementById('pk-w').value;
+  var pkH = document.getElementById('pk-h').value;
+  var pkKg= document.getElementById('pk-kg').value;
+
+  document.getElementById('sm-l-in').textContent = smL ? cmToIn(smL)+' in' : '— in';
+  document.getElementById('sm-w-in').textContent = smW ? cmToIn(smW)+' in' : '— in';
+  document.getElementById('sm-h-in').textContent = smH ? cmToIn(smH)+' in' : '— in';
+  document.getElementById('sm-lb').textContent   = smKg? kgToLb(smKg)+' lb' : '— lb';
+  document.getElementById('pk-l-in').textContent = pkL ? cmToIn(pkL)+' in' : '— in';
+  document.getElementById('pk-w-in').textContent = pkW ? cmToIn(pkW)+' in' : '— in';
+  document.getElementById('pk-h-in').textContent = pkH ? cmToIn(pkH)+' in' : '— in';
+  document.getElementById('pk-lb').textContent   = pkKg? kgToLb(pkKg)+' lb' : '— lb';
+
+  document.getElementById('d-sm-l').textContent  = dimStr(smL);
+  document.getElementById('d-sm-w').textContent  = dimStr(smW);
+  document.getElementById('d-sm-h').textContent  = dimStr(smH);
+  document.getElementById('d-sm-kg').textContent = weightStr(smKg);
+  document.getElementById('d-pk-l').textContent  = dimStr(pkL);
+  document.getElementById('d-pk-w').textContent  = dimStr(pkW);
+  document.getElementById('d-pk-h').textContent  = dimStr(pkH);
+  document.getElementById('d-pk-kg').textContent = weightStr(pkKg);
+
+  // Materials
+  var mats = getChecked('mat-list');
+  document.getElementById('p-materials').textContent = mats.length ? mats.join(', ')+'.' : '—';
+
+  // Colors
+  var cols = getChecked('color-list');
+  var otroChk = document.getElementById('otros-check');
+  var otroVal = document.getElementById('otros-input').value.trim();
+  if(otroChk.checked && otroVal) cols.push(otroVal);
+  document.getElementById('p-color').textContent = cols.length ? cols.join(', ')+'.' : '—';
+
+  // Assembly
+  var asm = getChecked('asm-list');
+  document.getElementById('p-assembly').textContent = asm.length ? asm.join('. ')+'.' : '—';
+}
+
+update();
+</script>
 </body>
 </html>
